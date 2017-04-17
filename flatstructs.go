@@ -236,9 +236,11 @@ func checkStruct(reflectValue reflect.Value) error {
 }
 
 func isStructFieldExported(field reflect.StructField) bool {
-	// FIXME: Find a proper way of filtering unexported fields.
-	// XXX: http://coub.com/view/ru550
-	return unicode.IsUpper(rune(field.Name[0]))
+	// From reflect docs:
+	// PkgPath is the package path that qualifies a lower case (unexported)
+	// field name. It is empty for upper case (exported) field names.
+	// See https://golang.org/ref/spec#Uniqueness_of_identifiers
+	return field.PkgPath == ""
 }
 
 func indirectValue(reflectValue reflect.Value) reflect.Value {
