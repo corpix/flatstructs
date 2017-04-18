@@ -681,3 +681,39 @@ func TestBuilderValuesNestedNil(t *testing.T) {
 		spew.Sdump(sample),
 	)
 }
+
+func TestBuilderMap(t *testing.T) {
+	type Flat struct {
+		baz  string
+		Jazz string
+	}
+	type Nested struct {
+		Foo string
+		xyz string
+		Bar *Flat
+		Baz string
+	}
+	sample := Nested{
+		"foo",
+		"xyz",
+		&Flat{"baz", "jazz"},
+		"baz",
+	}
+
+	mapping, err := Map(&sample)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(
+		t,
+		map[string]interface{}{
+			"Foo":     "foo",
+			"BarJazz": "jazz",
+			"Baz":     "baz",
+		},
+		mapping,
+		spew.Sdump(sample),
+	)
+}

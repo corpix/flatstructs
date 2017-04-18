@@ -27,9 +27,15 @@ import (
 )
 
 var (
+	// Default is a Builder with the default parameters.
 	Default = NewBuilder("key", "")
 )
 
+// Builder is a flat structure builder.
+// It could be parameterized with tag name
+// to look up struct field names in and
+// a keyDelimiter which delimits key parts
+// when converting nested struct into flat.
 type Builder struct {
 	Tag          string
 	KeyDelimiter string
@@ -43,16 +49,18 @@ func (b *Builder) fieldName(field reflect.StructField) string {
 	return name
 }
 
+// Keys creates a flat slice of keys from a nested structure exported fields.
 func (b *Builder) Keys(v interface{}) ([]string, error) {
 	err := checkValue(v)
 	if err != nil {
 		return nil, err
 	}
 
-	return b.keys(v, []string{})
+	return b.toKeys(v, []string{})
 }
 
-func (b *Builder) keys(v interface{}, prefix []string) ([]string, error) {
+// toKeys, see Keys().
+func (b *Builder) toKeys(v interface{}, prefix []string) ([]string, error) {
 	var (
 		reflectType  reflect.Type  = indirectType(reflect.TypeOf(v))
 		reflectValue reflect.Value = indirectValue(reflect.ValueOf(v))
@@ -91,7 +99,7 @@ func (b *Builder) keys(v interface{}, prefix []string) ([]string, error) {
 			var (
 				subKeys []string
 			)
-			subKeys, err = b.keys(
+			subKeys, err = b.toKeys(
 				fieldValue.Addr().Interface(),
 				append(prefix, key),
 			)
@@ -129,16 +137,18 @@ func (b *Builder) keys(v interface{}, prefix []string) ([]string, error) {
 	return keys, nil
 }
 
+// Values creates a flat slice of values from a nested structure exported fields.
 func (b *Builder) Values(v interface{}) ([]interface{}, error) {
 	err := checkValue(v)
 	if err != nil {
 		return nil, err
 	}
 
-	return b.values(v)
+	return b.toValues(v)
 }
 
-func (b *Builder) values(v interface{}) ([]interface{}, error) {
+// toValues, see Values().
+func (b *Builder) toValues(v interface{}) ([]interface{}, error) {
 	var (
 		reflectType  reflect.Type  = indirectType(reflect.TypeOf(v))
 		reflectValue reflect.Value = indirectValue(reflect.ValueOf(v))
@@ -183,7 +193,7 @@ func (b *Builder) values(v interface{}) ([]interface{}, error) {
 			var (
 				subValues []interface{}
 			)
-			subValues, err = b.values(
+			subValues, err = b.toValues(
 				fieldValue.Addr().Interface(),
 			)
 			if err != nil {
@@ -212,6 +222,41 @@ func (b *Builder) values(v interface{}) ([]interface{}, error) {
 	}
 
 	return values, nil
+}
+
+// Map creates a map with Keys(): Values() from a nested structure.
+func (b *Builder) Map(v interface{}) (map[string]interface{}, error) {
+	err := checkValue(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return b.toMap(v)
+}
+
+// toMap, see Map().
+func (b *Builder) toMap(v interface{}) (map[string]interface{}, error) {
+	var (
+		result = make(map[string]interface{})
+		keys   []string
+		values []interface{}
+		err    error
+	)
+
+	keys, err = b.Keys(v)
+	if err != nil {
+		return nil, err
+	}
+	values, err = b.Values(v)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, _ := range keys {
+		result[keys[k]] = values[k]
+	}
+
+	return result, nil
 }
 
 func checkValue(v interface{}) error {
@@ -258,16 +303,29 @@ func indirectType(reflectType reflect.Type) reflect.Type {
 
 //
 
+// Keys creates a flat slice of keys from a nested structure exported fields.
+// It uses Default Builder.
 func Keys(v interface{}) ([]string, error) {
 	return Default.Keys(v)
 }
 
+// Values creates a flat slice of values from a nested structure exported fields.
+// It uses Default Builder.
 func Values(v interface{}) ([]interface{}, error) {
 	return Default.Values(v)
 }
 
+// Map creates a map with Keys(): Values() from a nested structure.
+// It uses Default Builder.
+func Map(v interface{}) (map[string]interface{}, error) {
+	return Default.Map(v)
+}
+
 //
 
+// NewBuilder creates new flat struct builder with
+// parameterized tag name and keyDelimiter which delimits key parts
+// when nested struct converted to flat.
 func NewBuilder(tag, keyDelimiter string) *Builder {
 	return &Builder{tag, keyDelimiter}
 }
