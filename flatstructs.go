@@ -24,7 +24,6 @@ package flatstructs
 import (
 	"reflect"
 	"strings"
-	"unicode"
 )
 
 var (
