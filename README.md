@@ -106,4 +106,5 @@ builder := flatstructs.NewBuilder("key", ".")
 
 builder.Keys(...)
 builder.Values(...)
+builder.Map(...)
 ```
