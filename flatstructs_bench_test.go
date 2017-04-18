@@ -441,3 +441,34 @@ func BenchmarkBuilderValuesNestedHard(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkBuilderMapNested(b *testing.B) {
+	type Flat struct {
+		Foo          int
+		Bar          int
+		Baz          int
+		LongerBurger int
+	}
+	type Nested struct {
+		Foo *Flat
+		Bar *Flat
+		Baz *Flat
+		Daz *Flat
+	}
+	nested := &Nested{
+		&Flat{1, 2, 3, 4},
+		&Flat{1, 2, 3, 4},
+		&Flat{1, 2, 3, 4},
+		&Flat{1, 2, 3, 4},
+	}
+	var (
+		err error
+	)
+	for k := 0; k < b.N; k++ {
+		_, err = Map(nested)
+		if err != nil {
+			b.Error(err)
+			return
+		}
+	}
+}
