@@ -1,6 +1,8 @@
 flatstructs
 -----------
 
+[![Build Status](https://travis-ci.org/corpix/flatstructs.svg?branch=master)](https://travis-ci.org/corpix/flatstructs)
+
 Provides helpers to flatten nested structures in go.
 
 ## Example
